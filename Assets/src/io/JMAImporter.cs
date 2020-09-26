@@ -6,10 +6,11 @@ using System.IO;
 
 using UnityEngine;
 using UnityEditor.Experimental.AssetImporters;
+using UnityEditor;
 
 namespace JointedModel {
 
-  [ScriptedImporter(3, new string[] { "jma","jmm","jmt","jmo","jmr","jmrx","jmz","jmw" })]
+  [ScriptedImporter(4, new string[] { "jma","jmm","jmt","jmo","jmr","jmrx","jmz","jmw" })]
   public class JMAImporter : ScriptedImporter {
 
     public enum HowDoIHandleThis {
@@ -18,7 +19,7 @@ namespace JointedModel {
       Default
     }
     public HowDoIHandleThis anim_handle_mode = HowDoIHandleThis.Default;
-
+    public bool loopTime = false;
     private int version;
     private int frame_count;
     private int frame_rate;
@@ -27,6 +28,7 @@ namespace JointedModel {
     private JMSNode[] nodes;
 
     private JMANodeState[,] keyframes;
+
 
     public override void OnImportAsset(AssetImportContext ctx)
     {
@@ -52,8 +54,15 @@ namespace JointedModel {
           clips[i].name = name + "." + string.Format("{0:00}",i);
         }
       }
-      foreach ( var clip in clips )
+      foreach ( var clip in clips ){
+        if ( this.loopTime ) {
+          AnimationClipSettings settings = AnimationUtility.GetAnimationClipSettings(clip);
+          settings.loopTime = true;
+          AnimationUtility.SetAnimationClipSettings(clip,settings);
+        }
         ctx.AddObjectToAsset(clip.name,clip);
+      }
+      
       
     }
     private string[] ReadFile( string filePath ) {
@@ -310,6 +319,7 @@ namespace JointedModel {
         }
         clips.Add(clip);
       }
+     
       return clips;
     }
   }
