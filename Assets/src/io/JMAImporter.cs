@@ -55,11 +55,7 @@ namespace JointedModel {
         }
       }
       foreach ( var clip in clips ){
-        if ( this.loopTime ) {
-          AnimationClipSettings settings = AnimationUtility.GetAnimationClipSettings(clip);
-          settings.loopTime = true;
-          AnimationUtility.SetAnimationClipSettings(clip,settings);
-        }
+        
         ctx.AddObjectToAsset(clip.name,clip);
       }
       
@@ -163,24 +159,35 @@ namespace JointedModel {
           var clip = new AnimationClip();
           clip.frameRate = 1;
 
+          
+          
           for ( int n = 0, N = this.nodes.Length; n < N; n++ ) {
+            
+            var pose_translation_frame =  new Keyframe[] { 
+                new Keyframe(0,this.keyframes[0,n].position.x * Constants.RESCALE_MULTIPLY),
+                new Keyframe(0,this.keyframes[0,n].position.z * Constants.RESCALE_MULTIPLY),
+                new Keyframe(0,this.keyframes[0,n].position.y * Constants.RESCALE_MULTIPLY)
+            };
 
+            var pose_rotation_frame = new Keyframe[] { 
+                  new Keyframe(0,this.keyframes[0,n].rotation.x),
+                  new Keyframe(0,this.keyframes[0,n].rotation.z),
+                  new Keyframe(0,this.keyframes[0,n].rotation.y),
+                  new Keyframe(0,this.keyframes[0,n].rotation.w)
+            };
 
-            var position = this.keyframes[f,n].position;
-            var rotation = this.keyframes[f,n].rotation;
-              
 
             var translation_frame =  new Keyframe[] { 
-                new Keyframe(0,position.x * Constants.RESCALE_MULTIPLY),
-                new Keyframe(0,position.z * Constants.RESCALE_MULTIPLY),
-                new Keyframe(0,position.y * Constants.RESCALE_MULTIPLY)
+                new Keyframe(1,this.keyframes[f,n].position.x * Constants.RESCALE_MULTIPLY),
+                new Keyframe(1,this.keyframes[f,n].position.z * Constants.RESCALE_MULTIPLY),
+                new Keyframe(1,this.keyframes[f,n].position.y * Constants.RESCALE_MULTIPLY)
             };
 
             var rotation_frame = new Keyframe[] { 
-                new Keyframe(0,rotation.x),
-                new Keyframe(0,rotation.z),
-                new Keyframe(0,rotation.y),
-                new Keyframe(0,rotation.w)
+                new Keyframe(1,this.keyframes[f,n].rotation.x),
+                new Keyframe(1,this.keyframes[f,n].rotation.z),
+                new Keyframe(1,this.keyframes[f,n].rotation.y),
+                new Keyframe(1,this.keyframes[f,n].rotation.w)
             };
 
             string relativePath = GetNodePath(n);
@@ -189,52 +196,58 @@ namespace JointedModel {
                 relativePath,
                 typeof(Transform),
                 "localPosition.x",
-                new AnimationCurve( new Keyframe[] {translation_frame[0]} )
+                new AnimationCurve( new Keyframe[] {pose_translation_frame[0],translation_frame[0]} )
             );
 
             clip.SetCurve(
                 relativePath,
                 typeof(Transform),
                 "localPosition.y",
-                new AnimationCurve( new Keyframe[] {translation_frame[1]} )
+                new AnimationCurve( new Keyframe[] {pose_translation_frame[1],translation_frame[1]} )
             );
 
             clip.SetCurve(
                 relativePath,
                 typeof(Transform),
                 "localPosition.z",
-                new AnimationCurve(  new Keyframe[] {translation_frame[2]}  )
+                new AnimationCurve(  new Keyframe[] {pose_translation_frame[2],translation_frame[2]}  )
             );
 
             clip.SetCurve(
                 relativePath,
                 typeof(Transform),
                 "localRotation.x",
-                new AnimationCurve( new Keyframe[] {rotation_frame[0]}  )
+                new AnimationCurve( new Keyframe[] {pose_rotation_frame[0],rotation_frame[0]}  )
             );
 
             clip.SetCurve(
                 relativePath,
                 typeof(Transform),
                 "localRotation.y",
-                new AnimationCurve( new Keyframe[] {rotation_frame[1]} )
+                new AnimationCurve( new Keyframe[] {pose_rotation_frame[1],rotation_frame[1]} )
             );
 
             clip.SetCurve(
                 relativePath,
                 typeof(Transform),
                 "localRotation.z",
-                new AnimationCurve( new Keyframe[] {rotation_frame[2]} )
+                new AnimationCurve( new Keyframe[] {pose_rotation_frame[2],rotation_frame[2]} )
             );
 
             clip.SetCurve(
                 relativePath,
                 typeof(Transform),
                 "localRotation.w",
-                new AnimationCurve( new Keyframe[] {rotation_frame[3]} )
+                new AnimationCurve( new Keyframe[] {pose_rotation_frame[3],rotation_frame[3]} )
             );
 
           }
+          AnimationClipSettings settings = AnimationUtility.GetAnimationClipSettings(clip);
+          settings.additiveReferencePoseClip = clip;
+          settings.additiveReferencePoseTime = 0;
+
+
+          AnimationUtility.SetAnimationClipSettings(clip,settings);
           clips.Add(clip);
         }
 
@@ -315,6 +328,13 @@ namespace JointedModel {
             "localRotation.w",
             new AnimationCurve( rotation_frames.Select(e => e[3]).ToArray() )
           );
+          AnimationClipSettings settings = AnimationUtility.GetAnimationClipSettings(clip);
+          if ( this.loopTime ) {
+            settings.loopTime = true;
+          }
+
+
+          AnimationUtility.SetAnimationClipSettings(clip,settings);
 
         }
         clips.Add(clip);
