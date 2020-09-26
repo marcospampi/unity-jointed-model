@@ -2,6 +2,7 @@
 Jointed model importers for Unity 3D
 
 Extends Unity 3D with two custom importers for Jointed Model's model and animation format:
+
 Current features:
 - Import JMS ( models )
 - Import JMA and variants, by default JMO's frames are split in clips to aid the user, tweakable.
