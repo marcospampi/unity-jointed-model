@@ -5,11 +5,12 @@ using System.Linq;
 using System.IO;
 
 using UnityEngine;
+using UnityEditor;
 using UnityEditor.Experimental.AssetImporters;
 
 namespace JointedModel
 {
-  [ScriptedImporter(2, "jms")]
+  [ScriptedImporter(3, "jms")]
   public class JMSImporter : ScriptedImporter
   {
 		// todo: public bool SeparateShaders = false;
@@ -21,7 +22,6 @@ namespace JointedModel
 		private string[] regions;
 		private JMSVertex[] vertices;
 		private JMSTriangle[] triangles;
-
 		// holy cow
 		private Matrix4x4[] nodes_matrix;
 
@@ -31,7 +31,7 @@ namespace JointedModel
 			this.Populate( text );
 
 			var root = new GameObject();
-
+			root.name = Path.GetFileNameWithoutExtension(ctx.assetPath);
 			GameObject[] nodes = this.GenerateNodes();
 			this.GenerateMarkers(nodes);
 
@@ -80,10 +80,30 @@ namespace JointedModel
 			foreach( Mesh mesh in meshes )
 				ctx.AddObjectToAsset( mesh.name, mesh );
 
+
+			// avatar
+			Avatar avatar = AvatarBuilder.BuildGenericAvatar(root,nodes[0].transform.name);
+			avatar.name = root.name+"Avatar";
+
+			avatar.hideFlags = HideFlags.None;
+						
+			Animator animator = root.AddComponent<Animator>();
+			animator.avatar = avatar;
+
+			AvatarMask mask = new AvatarMask();
+
+			mask.name = root.name + "AvatarMask";
+			foreach( var node in nodes ) {
+				mask.AddTransformPath(node.transform);
+			}
+
+			ctx.AddObjectToAsset(avatar.name, avatar);
+			ctx.AddObjectToAsset(mask.name,mask);
 			ctx.AddObjectToAsset("root",root);
+
 			ctx.SetMainObject(root);
 
-			;
+			
     }
 
 		/// <summary>
